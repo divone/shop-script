@@ -7570,7 +7570,7 @@ msgstr "Варианты доставки"
 msgid "Select a shipping option"
 msgstr "Выберите вариант доставки"
 
-msgid "There are no shipping options available for specified location."
+msgid "There are no shipping options available for the specified location."
 msgstr "Для указанного вами местоположения нет доступных вариантов доставки."
 
 msgid "Please check values in location fields or contact us."
@@ -14922,3 +14922,72 @@ msgstr "Сгенерировать с нуля"
 
 msgid "The product is out of stock."
 msgstr "Товара нет на складе."
+
+msgid "There are unsaved data in the tool settings."
+msgstr "В настройках инструмента есть несохраненные данные."
+
+msgid "You are about to leave the tool settings tab without saving the entered data. Are you sure?"
+msgstr "Вы собираетесь покинуть настройки инструмента без сохранения введенных данных. Вы уверены?"
+
+msgid "Loyalty card"
+msgstr "Карта лояльности"
+
+msgid "Could not save the loyalty card code."
+msgstr "Не удалось сохранить код карты лояльности."
+
+msgid "Use 12-digit card format to enable EAN-13 barcode generation."
+msgstr "Используйте 12‑значный формат номера карты для генерации штрихкодов EAN‑13."
+
+msgid "Use <a %s>Shop-Script mobile POS app</a> to scan this loyalty card code during in-person checkout to link an order with the customer’s online profile."
+msgstr "Используйте <a %s>мобильную кассу Shop‑Script</a> для сканирования карт лояльности при покупках в точке продаж — так заказ будет автоматически связан с онлайн‑профилем клиента."
+
+msgid "12-digit loyalty card code format is recommended."
+msgstr "Рекомендуем использовать 12‑значный формат кода карты лояльности."
+
+msgid "This customer does not have a loyalty card yet."
+msgstr "У этого клиента еще нет карты лояльности."
+
+msgid "Generate new card"
+msgstr "Сгенерировать новую карту"
+
+msgid "Customer not found."
+msgstr "Клиент не найден."
+
+msgid "The loyalty card code must contain 12 digits and must not start with 0."
+msgstr "Код карты лояльности должен содержать 12 цифр и не должен начинаться с 0."
+
+msgid "Unable to generate a unique loyalty card code."
+msgstr "Не удалось сгенерировать уникальный код карты лояльности."
+
+msgid "Loyalty card code has been saved."
+msgstr "Код карты лояльности сохранен."
+
+msgid "The entered code was already taken. Another available code has been saved."
+msgstr "Введенный код уже занят. Сохранен другой доступный код."
+
+msgid "Save the product to edit its full-text description and features."
+msgstr "Другие поля описания товара станут доступны сразу после сохранения."
+
+msgid "Full-screen mode"
+msgstr "Полный редактор"
+
+msgid "Regular price"
+msgstr "Основная цена"
+
+msgid "by payment plugin"
+msgstr "плагином оплаты"
+
+msgid "by shipping plugin"
+msgstr "плагином доставки"
+
+msgid "by Shop-Script plugin"
+msgstr "плагином Shop-Script"
+
+msgid "by app"
+msgstr "приложением"
+
+msgid "by plugin"
+msgstr "плагином"
+
+msgid "Fiscalization performed %s “%s”."
+msgstr "Фискализация произведена %s «%s»."

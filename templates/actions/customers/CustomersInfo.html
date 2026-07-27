@@ -119,6 +119,8 @@
             {* @event backend_customer.%plugin_id%.header *}
             {if !empty($backend_customer)}{foreach $backend_customer as $_}{ifset($_.header)}{/foreach}{/if}
 
+            {include file="./include.loyalty.html" inline}
+
             <div class="s-block">
                 <h2>
                     {if $total_paid_num > 0}
@@ -317,7 +319,16 @@
 
 </div>
 
+{$_locales = [
+    "invalid_loyalty_code" => _w('Use 12-digit card format to enable EAN-13 barcode generation.')|escape,
+    "loyalty_barcode_unavailable" => _w('Use 12-digit card format to enable EAN-13 barcode generation.')|escape,
+    "loyalty_barcode_preview" => _w('Use 12-digit card format to enable EAN-13 barcode generation.')|escape,
+    "loyalty_save_failed" => _w('Could not save the loyalty card code.')|escape
+]}
+
 <script>(function() { "use strict";
+
+    $.customers.locales = $.extend({}, $.customers.locales || {}, {$_locales|json_encode});
 
     (function() {
         var $map = $('.js-map-block');

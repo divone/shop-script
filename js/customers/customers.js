@@ -2,6 +2,7 @@
     $.storage = new $.store();
     $.customers = {
         options: {},
+        locales: {},
 
         // last list view user has visited: {title: "...", hash: "..."}
         lastView: null,
@@ -40,7 +41,10 @@
                 hash: ''
             };
 
-            $(window).on('wa_loaded', () => this.initSearch())
+            $(document).on('wa_loaded', () => {
+                this.initSearch();
+                this.initLoyalty();
+            });
 
         },
 
@@ -135,6 +139,317 @@
                     }
                 });
             }
+        },
+
+        initLoyalty: function() {
+            $('.js-loyalty-card').each((index, card) => {
+                const $card = $(card);
+                if ($card.data('loyalty-initialized')) {
+                    return;
+                }
+                $card.data('loyalty-initialized', true);
+
+                const customerId = parseInt($card.data('customer-id'), 10) || 0;
+                const initialIdCode = this.normalizeLoyaltyCodeValue($card.data('id-code'));
+                const $view = $card.find('.js-loyalty-view');
+                const $empty = $card.find('.js-loyalty-empty');
+                const $form = $card.find('.js-loyalty-form');
+                const $input = $card.find('.js-loyalty-input');
+                const $error = $card.find('.js-loyalty-error');
+                const $success = $card.find('.js-loyalty-success');
+                const $loading = $card.find('.js-loyalty-loading');
+                const $save = $card.find('.js-loyalty-save');
+                const $cancel = $card.find('.js-loyalty-cancel');
+                const $code = $card.find('.js-loyalty-code');
+                const $result = $card.find('.js-loyalty-result');
+                const $barcode = $card.find('.js-loyalty-barcode');
+                const $barcodeWrapper = $card.find('.js-loyalty-barcode-wrapper');
+                const $barcodeText = $card.find('.js-loyalty-barcode-text');
+                const $barcodePlaceholder = $card.find('.js-loyalty-barcode-placeholder');
+                const invalidCodeText = String($.customers.locales.invalid_loyalty_code || '');
+                const barcodeUnavailableText = String($.customers.locales.loyalty_barcode_unavailable || '');
+                const barcodePreviewText = String($.customers.locales.loyalty_barcode_preview || '');
+                const saveFailedText = String($.customers.locales.loyalty_save_failed || '');
+                const getErrorText = (errors) => {
+                    if ($.isArray(errors)) {
+                        return String(errors[0] || '');
+                    }
+                    return String(errors || '');
+                };
+
+                const renderBarcode = (idCode, options) => {
+                    const normalized = $.customers.normalizeLoyaltyCodeValue(idCode);
+                    const ean13 = $.customers.getLoyaltyEan13(normalized);
+                    const placeholderText = options && options.placeholderText ? options.placeholderText : barcodeUnavailableText;
+
+                    if (ean13) {
+                        $barcode.html($.customers.renderEan13Svg(ean13));
+                        $barcodeText.text(ean13);
+                        $barcodeWrapper.show();
+                        $barcodePlaceholder.hide().text('');
+                    } else {
+                        $barcode.empty();
+                        $barcodeText.text('');
+                        $barcodeWrapper.hide();
+                        $barcodePlaceholder.text(placeholderText).show();
+                    }
+                };
+
+                const renderView = (idCode) => {
+                    const normalized = $.customers.normalizeLoyaltyCodeValue(idCode);
+                    const formatted = $.customers.formatLoyaltyCode(normalized);
+                    if (formatted) {
+                        $code.text(formatted);
+                    }
+                    renderBarcode(normalized);
+                };
+
+                const openEditor = (idCode) => {
+                    const normalized = $.customers.normalizeLoyaltyCodeValue(idCode);
+                    $empty.hide();
+                    $view.show();
+                    $result.hide();
+                    $error.hide().text('');
+                    $success.hide().text('');
+                    $input.val(normalized);
+                    renderBarcode(normalized, {
+                        placeholderText: barcodePreviewText
+                    });
+                    $form.show();
+                    $input.trigger('focus').trigger('select');
+                };
+
+                const closeEditor = (idCode) => {
+                    const normalized = $.customers.normalizeLoyaltyCodeValue(idCode);
+                    $card.data('id-code', normalized);
+                    $form.hide();
+                    if (normalized) {
+                        renderView(normalized);
+                        $view.show();
+                        $result.show();
+                        $empty.hide();
+                    } else {
+                        $view.hide();
+                        $result.show();
+                        $empty.show();
+                    }
+                };
+
+                const cancelEditor = () => {
+                    if ($save.prop('disabled')) {
+                        return;
+                    }
+
+                    $error.hide().text('');
+                    $success.hide().text('');
+                    closeEditor($card.data('id-code') || '');
+                };
+
+                if (initialIdCode) {
+                    renderView(initialIdCode);
+                }
+
+                $card.on('click', '.js-loyalty-generate', function () {
+                    openEditor($.customers.generateLoyaltyCode(customerId, 0));
+                    return false;
+                });
+
+                $card.on('click', '.js-loyalty-edit', function () {
+                    openEditor($card.data('id-code') || '');
+                    return false;
+                });
+
+                $input.on('input', function () {
+                    const value = $.customers.normalizeLoyaltyCodeValue($(this).val());
+                    if ($(this).val() !== value) {
+                        $(this).val(value);
+                    }
+                    $error.hide().text('');
+                    $success.hide().text('');
+                    renderBarcode(value, {
+                        placeholderText: barcodePreviewText
+                    });
+                });
+
+                $input.on('keydown', function (event) {
+                    if (event.key === 'Escape' || event.keyCode === 27) {
+                        event.preventDefault();
+                        cancelEditor();
+                    }
+                });
+
+                $card.on('click', '.js-loyalty-cancel', function () {
+                    cancelEditor();
+                    return false;
+                });
+
+                $card.on('click', '.js-loyalty-save', function () {
+                    const idCode = $.customers.normalizeLoyaltyCodeValue($input.val());
+                    $input.val(idCode);
+                    $error.hide().text('');
+                    $success.hide().text('');
+
+                    if (!$.customers.isValidLoyaltyCode(idCode)) {
+                        $error.text(invalidCodeText).show();
+                        $input.trigger('focus');
+                        return false;
+                    }
+
+                    $save.prop('disabled', true);
+                    $loading.show();
+
+                    $.post($card.data('save-url'), {
+                        customer_id: customerId,
+                        id_code: idCode
+                    }, function (response) {
+                        const data = response && response.data ? response.data : null;
+
+                        if (response && response.status === 'ok' && data && data.id_code) {
+                            if (data.message) {
+                                if (data.id_code != idCode) {
+                                    $error.text(data.message).show();
+                                }else{
+                                    $success.text(data.message).show();
+                                }
+                            }
+                            closeEditor(data.id_code);
+                        } else if (response && response.errors) {
+                            $error.text(getErrorText(response.errors)).show();
+                        } else {
+                            $error.text(saveFailedText).show();
+                        }
+                    }, 'json').fail(function () {
+                        $error.text(saveFailedText).show();
+                    }).always(function () {
+                        $save.prop('disabled', false);
+                        $loading.hide();
+                    });
+
+                    return false;
+                });
+            });
+        },
+
+        normalizeLoyaltyCodeValue: function(value) {
+            return String(value || '').replace(/\D+/g, '').substr(0, 12);
+        },
+
+        formatLoyaltyCode: function(value) {
+            const normalized = this.normalizeLoyaltyCodeValue(value);
+            if (!normalized) {
+                return '';
+            }
+            return normalized.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+        },
+
+        isValidLoyaltyCode: function(value) {
+            return /^[1-9][0-9]{11}$/.test(value);
+        },
+
+        getLoyaltyEan13: function(value) {
+            const normalized = this.normalizeLoyaltyCodeValue(value);
+            if (!this.isValidLoyaltyCode(normalized)) {
+                return '';
+            }
+            return normalized + this.getEan13Checksum(normalized);
+        },
+
+        getEan13Checksum: function(value) {
+            const normalized = this.normalizeLoyaltyCodeValue(value);
+            if (normalized.length !== 12) {
+                return '';
+            }
+
+            let sum = 0;
+            for (let i = 0; i < normalized.length; i += 1) {
+                const digit = parseInt(normalized[i], 10);
+                sum += digit * (i % 2 === 0 ? 1 : 3);
+            }
+
+            return String((10 - (sum % 10)) % 10);
+        },
+
+        renderEan13Svg: function(value) {
+            const normalized = String(value || '').replace(/\D+/g, '');
+            if (!/^\d{13}$/.test(normalized)) {
+                return '';
+            }
+
+            const sets = {
+                A: ['0001101', '0011001', '0010011', '0111101', '0100011', '0110001', '0101111', '0111011', '0110111', '0001011'],
+                B: ['0100111', '0110011', '0011011', '0100001', '0011101', '0111001', '0000101', '0010001', '0001001', '0010111'],
+                C: ['1110010', '1100110', '1101100', '1000010', '1011100', '1001110', '1010000', '1000100', '1001000', '1110100']
+            };
+            const structure = ['AAAAAA', 'AABABB', 'AABBAB', 'AABBBA', 'ABAABB', 'ABBAAB', 'ABBBAA', 'ABABAB', 'ABABBA', 'ABBABA'];
+            const firstDigit = parseInt(normalized[0], 10);
+            const leftDigits = normalized.slice(1, 7).split('');
+            const rightDigits = normalized.slice(7).split('');
+
+            let bits = '101';
+            const leftStructure = structure[firstDigit];
+
+            leftDigits.forEach((digit, index) => {
+                bits += sets[leftStructure[index]][parseInt(digit, 10)];
+            });
+
+            bits += '01010';
+
+            rightDigits.forEach((digit) => {
+                bits += sets.C[parseInt(digit, 10)];
+            });
+
+            bits += '101';
+
+            const moduleWidth = 2;
+            const height = 72;
+            const guardHeight = 78;
+            const width = bits.length * moduleWidth;
+            let rects = '';
+
+            for (let i = 0; i < bits.length; i += 1) {
+                if (bits[i] !== '1') {
+                    continue;
+                }
+
+                const isGuard = i < 3 || (i >= 45 && i < 50) || i >= 92;
+                rects += `<rect x="${i * moduleWidth}" y="0" width="${moduleWidth}" height="${isGuard ? guardHeight : height}" fill="#000"></rect>`;
+            }
+
+            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} 92" width="100%" height="92" role="img" aria-label="EAN-13 ${normalized}"><rect width="${width}" height="92" fill="#fff"></rect>${rects}<text x="0" y="90" font-size="12" font-family="monospace" fill="#000">${normalized[0]}</text><text x="16" y="90" font-size="12" font-family="monospace" fill="#000">${normalized.slice(1, 7)}</text><text x="${width - 84}" y="90" font-size="12" font-family="monospace" fill="#000">${normalized.slice(7)}</text></svg>`;
+        },
+
+        generateLoyaltyCode: function(customerId, attempt) {
+            let seed = this.hashLoyaltySeed(String(customerId) + ':' + String(attempt || 0) + ':shop-customer-id-code');
+            let code = '';
+
+            for (let i = 0; i < 12; i += 1) {
+                seed = this.nextLoyaltySeed(seed, i);
+                let digit = seed % 10;
+
+                if (i === 0) {
+                    digit = (seed % 9) + 1;
+                }
+
+                code += String(digit);
+            }
+
+            return code;
+        },
+
+        hashLoyaltySeed: function(value) {
+            let hash = 2166136261;
+
+            for (let i = 0; i < value.length; i += 1) {
+                hash ^= value.charCodeAt(i);
+                hash = Math.imul(hash, 16777619) >>> 0;
+            }
+
+            return hash >>> 0;
+        },
+
+        nextLoyaltySeed: function(seed, step) {
+            seed = (Math.imul((seed ^ (step + 1)) >>> 0, 1597334677) + 12345) >>> 0;
+            return seed || 1;
         },
 
         initLazyLoad: function(options) {

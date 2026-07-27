@@ -60,14 +60,9 @@ class shopOrderListAction extends waViewAction
     public function getUpdatedOrders()
     {
         if ($this->updated_orders === null) {
-            $search = waRequest::get('search', '');
-            if ($search) {
-                $search = preg_replace('/([<>]=?)([^=]+)/', '$1"$2"', $search);
-                $this->collection->addWhere($search);
-                $this->updated_orders = $this->collection->getOrders("*,products,contact,assigned_contact,params,courier");
-                self::extendContacts($this->updated_orders);
-                shopHelper::workupOrders($this->updated_orders);
-            }
+            $this->updated_orders = $this->collection->getOrders("*,products,contact,assigned_contact,params,courier");
+            self::extendContacts($this->updated_orders);
+            shopHelper::workupOrders($this->updated_orders);
         }
         return $this->updated_orders;
     }
@@ -160,6 +155,8 @@ class shopOrderListAction extends waViewAction
                         $k = 'params.'.$k;
                     } elseif ($k == 'item_code') {
                         $k = 'item_code.any';
+                    } elseif ($k == 'customer_code') {
+                        $k = 'customer.id_code';
                     } elseif ($k == 'product_id') {
                         $k = 'items.'.$k;
                     } elseif ($k == 'city' || $k == 'country' || $k == 'region') {
@@ -261,6 +258,11 @@ class shopOrderListAction extends waViewAction
             if ($item_code) {
                 $params['item_code'] = $item_code;
             }
+            $customer_code = waRequest::get('customer_code', null, waRequest::TYPE_STRING_TRIM);
+            if ($customer_code) {
+                $params['customer_code'] = $customer_code;
+            }
+            
             $viewpos = waRequest::get('viewpos', null, waRequest::TYPE_STRING);
             if ($viewpos) {
                 if (wa_is_int($viewpos)) {

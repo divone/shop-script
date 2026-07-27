@@ -205,8 +205,10 @@ return array(
         'number_of_orders' => array('int', 11, 'unsigned' => 1, 'null' => 0, 'default' => '0'),
         'last_order_id' => array('int', 11, 'unsigned' => 1),
         'source' => array('varchar', 255),
+        'id_code' => array('varchar', 32),
         ':keys' => array(
             'PRIMARY' => 'contact_id',
+            'id_code' => 'id_code',
         ),
         ':options' => ['charset' => 'utf8mb4'],
     ),

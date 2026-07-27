@@ -21,7 +21,7 @@ class shopOrdersLoadListController extends shopOrderListAction
 
             $datas['updated_orders'] = $updated_orders;
 
-            $this->assign($datas);
+            $this->assign($datas); // will exit
         }
 
         // if 'id' is passed

@@ -22,6 +22,11 @@ abstract class shopSortableModel extends waModel
             $sort = $after_item[$this->sort];
         } else {
             $sort = -1;
+            $sql = "SELECT MIN({$this->sort}) FROM ".$this->table;
+            $min_sort = $this->query($sql)->fetchField();
+            if ($min_sort <= $sort) {
+                $sort = $min_sort - 1;
+            }
         }
 
         $sql = null;

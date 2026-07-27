@@ -55,7 +55,7 @@ class shopWorkflow extends waWorkflow
         return waUtils::varExportToFile($config, $file);
     }
 
-    public static function setTemporaryConfig(array $config = null)
+    public static function setTemporaryConfig(?array $config = null)
     {
         if (waConfig::get('is_template')) {
             return;

@@ -134,7 +134,23 @@ class shopFrontendCheckoutAction extends waViewAction
             $payment_success = false;
         } else {
             $payment_success = true;
-            $this->view->assign('payment_success', true);
+            try {
+                $order_payment_code = waRequest::request('code', null, waRequest::TYPE_STRING);
+                if ($order_payment_code) {
+                    $order = new shopOrder($order_id);
+                    $proper_code = $order->getPaymentLinkHash();
+                    if ($order_payment_code === $proper_code) {
+                        $payment_success = false;
+                    }
+                }
+            } catch (Exception $e) {
+                // something's wrong with the order
+                $order_id = null;
+            }
+
+            if ($payment_success) {
+                $this->view->assign('payment_success', true);
+            }
         }
         if (!$order_id) {
             wa()->getResponse()->redirect(wa()->getRouteUrl('shop/frontend'));

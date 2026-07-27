@@ -4,6 +4,9 @@
  */
 class shopCustomerModel extends waModel
 {
+    const ID_CODE_LENGTH = 12;
+    const ID_CODE_MAX_ATTEMPTS = 128;
+
     protected $table = 'shop_customer';
     protected $id = 'contact_id';
 
@@ -210,5 +213,77 @@ class shopCustomerModel extends waModel
             'total_spent' => $om->getTotalSalesByContact($contact_id)
         ));
     }
-}
 
+    public function normalizeIdCode($id_code) {
+        return trim((string)$id_code);
+    }
+
+    public function isValidIdCode($id_code) {
+        return (bool)preg_match('~^[1-9][0-9]{' . (self::ID_CODE_LENGTH - 1) . '}$~', $id_code);
+    }
+
+    public function generateIdCode($contact_id, $attempt = 0) {
+        $seed = $this->hashIdCodeSeed($contact_id . ':' . $attempt . ':shop-customer-id-code');
+        $digits = '';
+
+        for ($i = 0; $i < self::ID_CODE_LENGTH; $i++) {
+            $seed = $this->nextIdCodeSeed($seed, $i);
+            $digit = $seed % 10;
+
+            if ($i === 0) {
+                $digit = ($seed % 9) + 1;
+            }
+
+            $digits .= $digit;
+        }
+
+        return $digits;
+    }
+
+    public function getAvailableIdCode($contact_id, $preferred_id_code = null) {
+        $preferred_id_code = $this->normalizeIdCode($preferred_id_code);
+        if ($preferred_id_code !== '' && $this->isIdCodeAvailable($preferred_id_code, $contact_id)) {
+            return $preferred_id_code;
+        }
+
+        for ($attempt = 0; $attempt < self::ID_CODE_MAX_ATTEMPTS; $attempt++) {
+            $id_code = $this->generateIdCode($contact_id, $attempt);
+            if ($this->isIdCodeAvailable($id_code, $contact_id)) {
+                return $id_code;
+            }
+        }
+
+        return null;
+    }
+
+    public function isIdCodeAvailable($id_code, $contact_id = null) {
+        $where = "id_code = s:id_code";
+        $params = [
+            'id_code' => $id_code,
+        ];
+
+        if ($contact_id) {
+            $where .= " AND contact_id <> i:contact_id";
+            $params['contact_id'] = $contact_id;
+        }
+
+        return !$this->select('contact_id')->where($where, $params)->fetchField();
+    }
+
+    protected function hashIdCodeSeed($value) {
+        $hash = 2166136261;
+        $length = strlen($value);
+
+        for ($i = 0; $i < $length; $i++) {
+            $hash ^= ord($value[$i]);
+            $hash = ($hash * 16777619) & 0xffffffff;
+        }
+
+        return $hash;
+    }
+
+    protected function nextIdCodeSeed($seed, $step) {
+        $seed = ((($seed ^ ($step + 1)) * 1597334677) + 12345) & 0xffffffff;
+        return $seed ?: 1;
+    }
+}

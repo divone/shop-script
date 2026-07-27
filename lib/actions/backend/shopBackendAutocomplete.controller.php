@@ -469,6 +469,15 @@ class shopBackendAutocompleteController extends waController
                    LIMIT {LIMIT}";
         $search_terms[] = $q;
 
+        // customer id_code starts with requested string
+        $sqls[] = "SELECT c.id, c.name, sc.id_code, c.firstname, c.middlename, c.lastname, c.photo
+                   FROM wa_contact AS c
+                       JOIN shop_customer AS sc
+                           ON sc.contact_id=c.id
+                   WHERE ".($is_user ? 'c.is_user = 1 AND ' : '')."sc.id_code LIKE '".$m->escape($q, 'like')."%'
+                   LIMIT {LIMIT}";
+        $search_terms[] = $q;
+
         // Phone contains requested string
         if (preg_match('~^[wp0-9\-\+\#\*\(\)\. ]+$~', $q)) {
 
@@ -559,6 +568,7 @@ class shopBackendAutocompleteController extends waController
                     $name = htmlspecialchars($c['name'], ENT_QUOTES, 'utf-8');
                     $email = htmlspecialchars(ifset($c['email'], ''), ENT_QUOTES, 'utf-8');
                     $phone = htmlspecialchars(ifset($c['phone'], ''), ENT_QUOTES, 'utf-8');
+                    $id_code = htmlspecialchars(ifset($c['id_code'], ''), ENT_QUOTES, 'utf-8');
 
                     $terms = (array)$search_terms[$index];
                     foreach ($terms as $term) {
@@ -586,6 +596,14 @@ class shopBackendAutocompleteController extends waController
                             $match = true;
                         }
 
+                        if ($this->match($id_code, $term_safe)) {
+                            $id_code = $this->prepare($id_code, $term_safe, false);
+                            if ($id_code) {
+                                $id_code = '<i class="icon16 contact far fa-id-card"></i> '.$id_code;
+                            }
+                            $match = true;
+                        }
+
                         if ($match) {
                             break;
                         }
@@ -596,7 +614,7 @@ class shopBackendAutocompleteController extends waController
                         'value'     => $c['id'],
                         'name'      => $c['name'],
                         'photo_url' => waContact::getPhotoUrl($c['id'], $c['photo'], 96),
-                        'label'     => implode(' ', array_filter(array($name, $email, $phone))),
+                        'label'     => implode(' ', array_filter(array($name, $email, $phone, $id_code))),
                     );
 
                     if (count($result) >= $limit) {

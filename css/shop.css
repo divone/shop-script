@@ -113,6 +113,8 @@ ul.menu-v.dropdown > li.is-opened > ul { display: block }
 #s-order-nav .s-pseudo-brick > .icon { margin-right: 0.375rem; }
 #s-order-nav .s-pseudo-brick > .count { margin-left: 0.5rem; order: 2; color: var(--light-gray); font-size: 0.75rem; padding-top: 0.125rem; } */
 #s-order-nav .s-order-view-toggle { min-width: 150px; z-index: 1; }
+#s-order-nav .s-order-view-toggle ul.chips { flex-wrap: nowrap; }
+#s-order-nav .s-order-view-toggle ul.chips li a { padding-left: 0.625rem; padding-right: 0.625rem; margin-right: 0 !important; }
 
 #s-order-nav[data-view-mode="split"] { flex-direction: column; padding-top: 0.5rem; }
 #s-order-nav[data-view-mode="split"] .s-order-nav-block { justify-content: space-between; padding-top: 0rem; padding-bottom: 0.5rem; margin-right: 0; }
@@ -1377,6 +1379,10 @@ input.s-datepicker { width: 6.1em; }
     table.s-product-skus td.s-stock .hint { max-width: 60px; }
     table.s-product-skus td i.icon16.settings { display: none; }
 
+}
+
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+   #s-order-nav .s-order-view-toggle ul.chips li a { padding-left: 0.5rem; padding-right: 0.5rem; }
 }
 
 @media only screen

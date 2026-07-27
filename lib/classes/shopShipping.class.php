@@ -185,7 +185,7 @@ class shopShipping extends waAppShipping
      * @return waOrder
      * @throws waException
      */
-    public static function getOrderData(array $order, waShipping $shipping_plugin = null)
+    public static function getOrderData(array $order, ?waShipping $shipping_plugin = null)
     {
 
         if (!isset($order['id_str'])) {

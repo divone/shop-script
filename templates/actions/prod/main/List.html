@@ -358,7 +358,7 @@
                             <h1 class="s-title">[`Products`]</h1>
                         </div>
                         <div class="s-new-product">
-                            <a class="button rounded" href="{$wa_app_url}products/new/general/">
+                            <a href="{$wa_app_url}products/new/general/" class="button rounded" @click.stop="openCreateProductDialog">
                                 <span class="s-icon icon baseline size-12" style="transform: translateY(1px);"><i class="fas fa-plus"></i></span>
                                 <span class="s-name">[`New product`]</span>
                             </a>
@@ -549,7 +549,9 @@
                         "save_photo_changes"        : "{$wa_app_url}?module=prod&action=saveImageDetails",
                         "ai_generate_image"         : "{$wa_app_url}?module=prod&action=aiGenerateImage",
                         "delete_images"             : "{$wa_app_url}?module=prod&action=deleteImage",
-                        "mass_ai_generate_image"    : "{$wa_app_url}?module=prod&action=massAiGenerateImage"
+                        "mass_ai_generate_image"    : "{$wa_app_url}?module=prod&action=massAiGenerateImage",
+
+                        "create_product_dialog"    : "{$wa_app_url}?module=prod&action=createProductDialog"
                     },
                     dummy_image_url      : "{$wa_url}wa-content/img/wa-ai/webasyst-wand-ai-light.svg",
 

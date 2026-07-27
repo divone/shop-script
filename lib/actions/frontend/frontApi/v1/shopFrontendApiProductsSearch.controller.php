@@ -96,6 +96,13 @@ class shopFrontendApiProductsSearchController extends shopFrontApiJsonController
         $this->response['count'] = $collection->count();
         $this->response['offset'] = $offset;
         $this->response['limit'] = $limit;
+        if (waRequest::request('price_range')) {
+            $range = $collection->getPriceRange();
+            $this->response += [
+                'price_min' => (float)shop_currency($range['min'], null, null, false),
+                'price_max' => (float)shop_currency($range['max'], null, null, false),
+            ];
+        }
         $this->response['products'] = array_values($formatter->format($products));
     }
 

@@ -154,7 +154,13 @@ class shopFrontendApiOrderCreateController extends shopFrontendApiOrderCalculate
             [$mime_type, $image_contents] = $this->decodeDataUrl($url);
         } else if (strtolower(substr($url, 0, 6)) === 'https:' || strtolower(substr($url, 0, 5)) === 'http:') {
             // fetch image from URL and save to file
-            $image_contents = @file_get_contents($url);
+            try {
+                $image_contents = (new waNet([
+                    'timeout' => 10,
+                ]))->query($url);
+            } catch (Throwable $e) {
+                $image_contents = false;
+            }
             if (!$image_contents) {
                 return '';
             }

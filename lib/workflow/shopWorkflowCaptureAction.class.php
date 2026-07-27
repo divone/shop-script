@@ -286,7 +286,7 @@ class shopWorkflowCaptureAction extends shopWorkflowPayAction
         return parent::postExecute($order_id, $result);
     }
 
-    protected function workupOrderItems(shopOrder $order, waPayment $plugin = null, $items = null)
+    protected function workupOrderItems(shopOrder $order, ?waPayment $plugin = null, $items = null)
     {
         if (!$items) {
             $items = $order->items;

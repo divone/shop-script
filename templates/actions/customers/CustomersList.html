@@ -28,6 +28,12 @@
                     similar_contacts=$c['similar_contacts']|default:[]
                     need_other_values=false
                 inline}
+                {if !empty($c.id_code)}
+                    <span title="[`Loyalty card`]">
+                        <i class="fas fa-barcode custom-mr-2"></i>
+                        <code class="smaller">{$c.id_code}</code>
+                    </span>
+                {/if}
 
                 <p>
                     {if !empty($c.address.country)}

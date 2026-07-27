@@ -73,7 +73,45 @@ class shopWorkflowCompleteAction extends shopWorkflowAction
             }
 
             $this->order_model->recalculateProductsTotalSales($order_id);
+
+            $this->fiscalizeOrder($order_id);
         }
         return $data;
+    }
+
+    protected function fiscalizeOrder($order_id)
+    {
+        $fis = new shopFiscalization($order_id);
+        if ($fis->isFiscalized()) {
+            return;
+        }
+
+        try {
+            $payment_id = ifset($fis->order_params, 'payment_id', null);
+            if ($payment_id) {
+                $payment_plugin = shopPayment::getPlugin(null, $payment_id);
+            }
+        } catch (Throwable $e) {
+        }
+        if (empty($payment_plugin) || !$payment_plugin instanceof waIPaymentFiscalize) {
+            return;
+        }
+
+        try {
+            $wa_order = shopPayment::getOrderData($order_id, $payment_plugin);
+            $payment_plugin->fiscalize($wa_order, []);
+        } catch (Throwable $e) {
+            waLog::dump([
+                'Unable to fiscalize payment',
+                'order_id' => $order_id,
+                ($e instanceof waException ? 
+                    sprintf("%s (%s)\n%s",
+                        $e->getMessage(),
+                        $e->getCode(),
+                        $e->getFullTraceAsString()
+                    ) : (string) $e
+                ),
+            ], 'shop/error.log');
+        }
     }
 }

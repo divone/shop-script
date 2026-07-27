@@ -234,7 +234,7 @@
                         </div>
                     {else}
                         {if !empty($_active_variant)}
-                            {$_error_text = "[`There are no shipping options available for specified location.`]<br>[`Please check values in location fields or contact us.`]"}
+                            {$_error_text = "[`There are no shipping options available for the specified location.`]<br>[`Please check values in location fields or contact us.`]"}
                         {/if}
                     {/if}
 
@@ -332,7 +332,7 @@
                 {/if}
 
             {elseif empty($_is_fast_render)}
-                {$_error_text = "[`There are no shipping options available for specified location.`]<br>[`Please check values in location fields or contact us.`]"}
+                {$_error_text = "[`There are no shipping options available for the specified location.`]<br>[`Please check values in location fields or contact us.`]"}
             {/if}
 
             {if !empty($_error_text)}

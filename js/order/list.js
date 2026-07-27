@@ -1494,10 +1494,13 @@
         buildLoadListUrl: function (id, lt, counters, order_update_datetime = null, sort = null, state_id = null) {
 
             if (order_update_datetime && this.filter_params_str && this.filter_params_str.includes('hash')) {
+                this.filter_params_str = this.filter_params_str.split(/%26/g).filter((a) => { 
+                    return a.substr(0, 15) !== 'update_datetime' ;
+                }).join('%26');
                 this.filter_params_str = this.filter_params_str + encodeURIComponent(`&update_datetime>=${order_update_datetime}`);
                 order_update_datetime = null;
             }
-
+            
             let param_state_id = state_id ? `&state_id=${state_id}` : '';
             sort = sort || this.sort;
 

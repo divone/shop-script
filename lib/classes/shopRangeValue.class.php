@@ -84,7 +84,7 @@ class shopRangeValue implements ArrayAccess
         }
         $str = implode(' — ', $str);
         $unit = ($this->begin ? $this->begin->unit_name : ($this->end ? $this->end->unit_name : null));
-        if ($with_unit && strlen($unit)) {
+        if ($with_unit && strlen((string)$unit)) {
             $str .= ' '.$unit;
         }
 

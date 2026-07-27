@@ -120,7 +120,7 @@ class shopFrontendApiCategoriesController extends shopFrontApiJsonController
             $features = $feature_model->getValues($features);
         }
 
-        $ranges = $this->getPriceRanges();
+        $ranges = $this->getPriceRanges(array_keys($categories));
         $categories_value_ids = $this->getFeatureValueIds();
 
         foreach ($categories as &$_category) {
@@ -132,7 +132,7 @@ class shopFrontendApiCategoriesController extends shopFrontApiJsonController
 
             foreach ($filter_ids as $fid) {
                 if (!isset($filters['price']) && ($fid == 'price' || $fid == 'base_price')) {
-                    if ($range && $range['min'] != $range['max']) {
+                    if ($range) {
                         if (($range['max'] - $range['min']) <= 1) {
                             $range['max'] +=2;
                         }
@@ -142,6 +142,10 @@ class shopFrontendApiCategoriesController extends shopFrontApiJsonController
                                 ['name' => 'min', 'value' => (float) shop_currency($range['min'], null, null, false)],
                                 ['name' => 'max', 'value' => (float) shop_currency($range['max'], null, null, false)],
                             ]
+                        ];
+                    } else {
+                        $filters['price'] = [
+                            'name' => 'price',
                         ];
                     }
                 } elseif (isset($features[$fid]) && isset($category_value_ids[$fid])) {
@@ -291,17 +295,21 @@ class shopFrontendApiCategoriesController extends shopFrontApiJsonController
         return $categories;
     }
 
-    protected function getPriceRanges()
+    protected function getPriceRanges(array $category_ids): array
     {
+        if (!$category_ids) {
+            return [];
+        }
         $ranges = [];
         $data = $this->model->query("
             SELECT sc.id cat_id, sc.parent_id cat_parent_id, MIN(p.min_price) min, MAX(p.max_price) max FROM shop_category_products cp1 
             JOIN shop_category sc ON sc.id = cp1.category_id 
             JOIN shop_product p ON p.id = cp1.product_id
             WHERE p.status = 1
+                AND sc.id IN (?)
             GROUP BY sc.id, sc.parent_id 
             ORDER BY sc.parent_id, sc.id
-        ")->fetchAll();
+        ", $category_ids);
 
         foreach ($data as $_d) {
             if (!isset($ranges[$_d['cat_id']])) {

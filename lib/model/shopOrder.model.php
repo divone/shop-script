@@ -481,6 +481,7 @@ SQL;
         if (!isset($data['create_datetime'])) {
             $data['create_datetime'] = date('Y-m-d H:i:s');
         }
+        $data['update_datetime'] = date('Y-m-d H:i:s');
         return parent::insert($data, $type);
     }
 

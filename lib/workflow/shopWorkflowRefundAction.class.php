@@ -338,7 +338,7 @@ class shopWorkflowRefundAction extends shopWorkflowAction
         return parent::getHTML($order_id);
     }
 
-    protected function workupOrderItems(shopOrder $order, waPayment $plugin = null, $items = null)
+    protected function workupOrderItems(shopOrder $order, ?waPayment $plugin = null, $items = null)
     {
         if (!$items) {
             $items = $order->items;

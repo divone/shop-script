@@ -1232,6 +1232,10 @@ class shopOrdersCollection
                 $op = ifset($parts[1], '');
                 $val = ifset($parts[2], '');
 
+                if ($param === 'by_code') {
+                    $param = 'customer.id_code';
+                }
+
                 if ($field = $this->dropPrefix($param, 'item_code.')) {
                     $where = ":table.value".$this->getExpression($op, $val);
                     if ($field != 'any') {
@@ -1299,7 +1303,14 @@ class shopOrdersCollection
                         $field = $customer_field;
                         $table = 'shop_customer';
                         $on = ':table.contact_id = o.contact_id';
-                    } elseif ($contact_field && self::getModel('contact')->fieldExists($contact_field)) {
+                        if ($customer_field === 'id_code') {
+                            shopCustomersCollectionPreparator::searchByCodeOpVal($op, $val);
+                            if ($op === '@=') {
+                                $op = '=';
+                                $val = join('||', explode(',', $val));
+                            }
+                        }
+                    } elseif (!empty($contact_field) && self::getModel('contact')->fieldExists($contact_field)) {
                         $field = $contact_field;
                         $table = 'wa_contact';
                         $on = ':table.id = o.contact_id';
@@ -1438,14 +1449,13 @@ class shopOrdersCollection
         }
 
         if (is_array($field)) {
-            $fields = $field;
             $order_by = array();
-            foreach ($fields as $field => $field_order) {
-                if (is_int($field)) {
-                    $field = $field_order;
+            foreach ($field as $f => $field_order) {
+                if (is_int($f)) {
+                    $f = $field_order;
                     $field_order = $order;
                 }
-                $order_by[] = $this->orderBy($field, $field_order);
+                $order_by[] = $this->orderBy($f, $field_order);
             }
             $this->order_by = implode(', ', $order_by);
         } else {

@@ -262,6 +262,9 @@ class shopProductReviewsModel extends waNestedSetModel
     {
         $sort = ifset($options, 'sort', null);
         $order = ifset($options, 'order', 'DESC');
+        if (strtolower($order) !== 'desc') {
+            $order = 'ASC';
+        }
 
         if ($sort === 'rate') {
             $result = $this->table . '.' . $sort;
@@ -269,8 +272,6 @@ class shopProductReviewsModel extends waNestedSetModel
             $result = $this->table . '.datetime';
         }
         $result .= " {$order}, {$this->table}.id";
-
-        $result = $this->escape($result);
 
         return $result;
     }

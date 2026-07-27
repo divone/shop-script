@@ -115,7 +115,11 @@
     <p class="small hide-if-blocks{if !empty($field_value) && $field_value !== '[]'} hidden{/if}">[`Or make up a custom homepage layout made up of blocks:`]</p>
 
     <input class="js-field-value" type="hidden" name="{$field_name|escape}" value="{$field_value|escape}">
-    <div class="dropdown js-dropdown custom-mb-4">
+
+    <div class="js-block-forms">
+    </div>
+
+    <div class="dropdown js-dropdown custom-mt-16">
         <a href="javascript:void(0);" class="dropdown-toggle button small rounded light-gray">
             <i class="fas fa-plus-circle text-green"></i> [`Add block`]
         </a>
@@ -123,10 +127,6 @@
             <ul class="menu"></ul>
         </div>
     </div>
-
-    <div class="js-block-forms">
-    </div>
-
 </div>
 
 

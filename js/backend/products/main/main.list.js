@@ -6968,6 +6968,23 @@
                     },
                     isMobile: function() {
                         return $('#wa-app .sidebar > .sidebar-mobile-toggle').is(':visible');
+                    },
+                    openCreateProductDialog: function(e) {
+                        try {
+                            const is_skip = JSON.parse(localStorage.getItem('shop/products/skip_create_dialog'));
+                            if (is_skip) {
+                                return;
+                            } else {
+                                e.preventDefault();
+                            }
+                        } catch {}
+
+                        if (this.states.opening_create_dialog) return;
+                        this.states.opening_create_dialog = true;
+                        $.get(that.urls["create_product_dialog"], (html) => {
+                            $.waDialog({ html });
+                            delete this.states.opening_create_dialog;
+                        });
                     }
                 },
                 delimiters: ['{ { ', ' } }'],

@@ -42,7 +42,7 @@ class shopProdCategorySortDialogSaveController extends waJsonController
     protected function validateData($category_id, $sort_products)
     {
         if ($sort_products) {
-            $correct_sort = preg_match('/(name|price)\s(ASC|DESC)/', $sort_products);
+            $correct_sort = preg_match('/^(name|price)\s(ASC|DESC)$/', $sort_products);
             if (empty($correct_sort)) {
                 $this->errors = [
                     'id' => 'incorrect_sort',

@@ -745,26 +745,31 @@ paths:
                     enum:
                       - default
                       - minimum
-                    description: Режим выбора региона доставки. default - один селектор стран и регионов (возможно, с ограничением по одной стране и/или региону); minimum - несколько вариантов с ограничением по стране, региону и/или городу. См. `shipping_locations`
+                    default: default
+                    description: |
+                      Режим выбора области доставки:
+
+                      + **default**: один селектор стран и регионов (возможно, с ограничением по одной стране и/или региону)
+                      + **minimum**: несколько вариантов с ограничением по стране, региону и/или населенному пункту; см. описание параметра `shipping_locations`
                   shipping_locations:
                     type: array
-                    description: Список доступных локаций для доставки
+                    description: Список доступных областей доставки
                     items:
                       type: object
                       properties:
                         name:
                           type: string
-                          description: Название локации
+                          description: Название области доставки
                         country:
                           type: string
                           description: 3-буквенный код страны
                         region:
                           type: string
-                          description: Код региона (если нет ограничения по регионам или у страны нет регионов, то null)
+                          description: Код региона (`null`, если нет ограничения по регионам или для страны не настроены регионы)
                           nullable: true
                         city:
                           type: string
-                          description: Название населённого пункта (если нет ограничения по населённым пунктам, то null)
+                          description: Название населенного пункта (`null`, если нет ограничения по населенным пунктам)
                           nullable: true
                   sales_channel:
                     type: object
@@ -818,14 +823,14 @@ paths:
           name: values_limit
           default: 1000
           description: |
-            Если передан параметр filters=1, то values_limit ограничивает общее количество значений в фильтрах типа "выбор из списка". Это предохранитель, чтобы ответ контроллера не оказался очень большим. Фильтры обрабатываются последовательно, суммируется количество значений. Когда общее количество значений превосходит values_limit, то в каждом последующем фильтре количество значений ограничивается числом min_values_count.
+            Ограничивает общее количество значений в фильтрах типа «выбор из списка», если в параметре `filters` получено значение 1. Позволяет ограничивать размер ответа контроллера, чтобы он не оказался слишком большим. Фильтры обрабатываются последовательно, с суммированием количества значений. Когда общее количество значений превосходит значение данного параметра, в каждом последующем фильтре количество значений ограничивается параметром `min_values_count`.
           schema:
             type: integer
         - in: query
           name: min_values_count
           default: 20
           description: |
-            См. values_limit
+            См. описание параметра `values_limit`
           schema:
             type: integer
       responses:
@@ -861,6 +866,7 @@ paths:
         - $ref: '#/components/parameters/customerToken'
         - $ref: '#/components/parameters/productListParamFields'
         - $ref: '#/components/parameters/productListParamFilters'
+        - $ref: '#/components/parameters/productListParamPriceRange'
         - $ref: '#/components/parameters/productListParamOffset'
         - $ref: '#/components/parameters/productListParamLimit'
         - $ref: '#/components/parameters/productListParamSort'
@@ -892,6 +898,7 @@ paths:
         - $ref: '#/components/parameters/customerToken'
         - $ref: '#/components/parameters/productListParamFields'
         - $ref: '#/components/parameters/productListParamFilters'
+        - $ref: '#/components/parameters/productListParamPriceRange'
         - $ref: '#/components/parameters/productListParamOffset'
         - $ref: '#/components/parameters/productListParamLimit'
         - $ref: '#/components/parameters/productListParamSort'
@@ -923,6 +930,7 @@ paths:
         - $ref: '#/components/parameters/customerToken'
         - $ref: '#/components/parameters/productListParamFields'
         - $ref: '#/components/parameters/productListParamFilters'
+        - $ref: '#/components/parameters/productListParamPriceRange'
         - $ref: '#/components/parameters/productListParamOffset'
         - $ref: '#/components/parameters/productListParamLimit'
         - $ref: '#/components/parameters/productListParamSort'
@@ -979,6 +987,7 @@ paths:
         - $ref: '#/components/parameters/customerToken'
         - $ref: '#/components/parameters/productListParamFields'
         - $ref: '#/components/parameters/productListParamFilters'
+        - $ref: '#/components/parameters/productListParamPriceRange'
         - $ref: '#/components/parameters/productListParamOffset'
         - $ref: '#/components/parameters/productListParamLimit'
         - $ref: '#/components/parameters/productListParamSort'
@@ -1010,6 +1019,7 @@ paths:
         - $ref: '#/components/parameters/customerToken'
         - $ref: '#/components/parameters/productListParamFields'
         - $ref: '#/components/parameters/productListParamFilters'
+        - $ref: '#/components/parameters/productListParamPriceRange'
         - $ref: '#/components/parameters/productListParamOffset'
         - $ref: '#/components/parameters/productListParamLimit'
         - $ref: '#/components/parameters/productListParamSort'
@@ -1040,6 +1050,7 @@ paths:
             type: string
         - $ref: '#/components/parameters/productListParamFields'
         - $ref: '#/components/parameters/productListParamFilters'
+        - $ref: '#/components/parameters/productListParamPriceRange'
         - $ref: '#/components/parameters/productListParamOffset'
         - $ref: '#/components/parameters/productListParamLimit'
         - $ref: '#/components/parameters/productListParamSort'
@@ -1590,6 +1601,14 @@ components:
         limit:
           type: integer
           description: Максимальное количество товаров, которые нужно получить
+        price_min:
+          type: number
+          description: Минимальная цена в списке полученных товаров; доступно, если в параметре `price_range` получено значение 1
+          nullable: true
+        price_max:
+          type: number
+          description: Максимальная цена в списке полученных товаров; доступно, если в параметре `price_range` получено значение 1
+          nullable: true
         products:
           type: array
           description: Список товаров
@@ -2558,7 +2577,7 @@ components:
         comment:
           type: string
           nullable: true
-          description: Не обязательный комментарий к заказу
+          description: Необязательный комментарий к заказу
         antispam_hash:
           type: string
           description: |
@@ -2589,6 +2608,14 @@ components:
       required: false
       schema:
         type: string
+    productListParamPriceRange:
+      in: query
+      name: price_range
+      description: Флаг (0 или 1), требующий получение значений `price_min` и `price_max`
+      required: false
+      schema:
+        type: integer
+        default: 0
     productListParamOffset:
       in: query
       name: offset

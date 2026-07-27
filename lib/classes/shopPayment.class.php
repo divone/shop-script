@@ -1020,7 +1020,7 @@ class shopPayment extends waAppPayment
         }
     }
 
-    public function declareFiscalization($order_id, waPayment $plugin, array $custom_data = null)
+    public function declareFiscalization($order_id, waPayment $plugin, ?array $custom_data = null)
     {
         $fiscalization = new shopFiscalization((int)$order_id);
         if ($fiscalization->isFiscalized()) {

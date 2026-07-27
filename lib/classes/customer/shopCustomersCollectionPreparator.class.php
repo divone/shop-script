@@ -287,9 +287,12 @@ class shopCustomersCollectionPreparator
         } else if ($hash_ar['app']['consider_orders']['val'] !== 'paid') {
             $options['include_unpaid_orders'] = true;
         } // also see middlewareSearchPrepare
+        
+        // `search/by_code=...` changes default behaviour from app.show_contacts=customers to app.show_contacts=all
+        $is_search_by_code = !empty($hash_ar['by_code']) && empty($hash_ar['app']['show_contacts']);  
 
         $show_contacts_val = ifempty($hash_ar, 'app', 'show_contacts', 'val', 'customers');
-        if ($show_contacts_val === 'all') {
+        if ($show_contacts_val === 'all' || $is_search_by_code) {
             $options['left_customer_join'] = true;
             // also see searchPrepareShowContacts
         }
@@ -339,9 +342,15 @@ class shopCustomersCollectionPreparator
             ];
         } else if (empty($hash_ar['app']['show_contacts'])) {
             $hash_ar['app']['show_contacts'] = [
-                'val' => 'customers',
+                // `search/by_code=...` changes default behaviour from app.show_contacts=customers to app.show_contacts=all
+                'val' => empty($hash_ar['by_code']) ? 'customers' : 'all',
                 'op' => '=',
             ];
+        }
+
+        if (!empty($hash_ar['by_code'])) {
+            $hash_ar['app']['id_code'] = $hash_ar['by_code'];
+            unset($hash_ar['by_code']);
         }
 
         if (!empty($hash_ar['app'])) {
@@ -363,6 +372,7 @@ class shopCustomersCollectionPreparator
                  * searchPrepareLastOrderDatetime
                  * searchPrepareCoupon
                  * searchPrepareUtmCampaign
+                 * searchPrepareIdCode
                  */
                 $method_name = 'searchPrepare' . implode('', array_map('ucfirst', explode('_', $k)));
                 if (method_exists($this, $method_name)) {
@@ -393,6 +403,64 @@ class shopCustomersCollectionPreparator
             $query[] = $rest_hash;
         }
         return implode('&', $query);
+    }
+
+    protected function searchPrepareIdCode($op, $val = '', $auto_title = true)
+    {
+        self::searchByCodeOpVal($op, $val);
+        $expr = $this->getExpression($op, $val);
+        $this->addWhere("{$this->customer_table_alias}.id_code {$expr}");
+    }
+
+    /**
+     * When searching for customer (or order; see shopOrdersCollection) by customer.id_code,
+     * and the value looks like valid EAN-13 (last digit is a checksum), then look
+     * for several values instead: both the original code as well as 12-digit code
+     * with last checksum digit removed.
+     */
+    public static function searchByCodeOpVal(&$op, &$val)
+    {
+        if ($op === '@=') {
+            $new_val = [];
+            foreach (explode(',', $val) as $v) {
+                $o = '=';
+                self::searchByCodeOpVal($o, $v);
+                if ($o === '@=') {
+                    foreach (explode(',', $v) as $vv) {
+                        $new_val[] = $vv;
+                    }
+                } else {
+                    $new_val[] = $v;
+                }
+            }
+            $val = join(',', $new_val);
+            return;
+        }
+        if ($op == '=' || $op == '==') {
+            if (self::isValidEac13($val)) {
+                $op = '@=';
+                $val .= ','.substr($val, 0, 12);
+            }
+            return;
+        }
+    }
+
+    protected static function isValidEac13($barcode): bool
+    {
+        if (!preg_match('/^\d{13}$/', $barcode)) {
+            return false;
+        }
+
+        $sum = 0;
+        for ($i = 0; $i < 12; $i++) {
+            if ($i % 2 === 1) {
+                $sum += 3 * ((int)$barcode[$i]);
+            } else {
+                $sum += (int)$barcode[$i];
+            }
+        }
+
+        return (10 - $sum % 10) % 10 === (int)$barcode[12];
     }
 
     protected function searchPrepareShowContacts($op, $val = '', $auto_title = true)

@@ -22,12 +22,21 @@ class shopFiscalization
         return !empty($this->order_params['fiscalization_datetime']);
     }
 
-    public function declareFiscalization($plugin_type, $plugin_id, array $custom_data=null)
+    public function declareFiscalization($plugin_type, $plugin_id, ?array $custom_data=null)
     {
         if ($this->isFiscalized()) {
             throw new waException('Fiscalization already applied');
         }
-        if (!in_array($plugin_type, ['payment', 'shipping', 'shop_plugin', 'app', 'app_plugin'])) {
+
+        $plugin_types = [
+            'payment' => _w('by payment plugin'),
+            'shipping' => _w('by shipping plugin'),
+            'shop_plugin' => _w('by Shop-Script plugin'),
+            'app' => _w('by app'),
+            'app_plugin' => _w('by plugin'),
+        ];
+
+        if (!isset($plugin_types[$plugin_type])) {
             throw new waException('Unknown plugin type');
         }
 
@@ -44,6 +53,16 @@ class shopFiscalization
 
         self::$params_model->set($this->order_id, $data, false);
         $this->order_params = array_merge($this->order_params, $data);
+
+        $order = new shopOrder($this->order_id);
+        (new shopOrderLogModel())->add([
+            'order_id'        => $this->order_id,
+            'contact_id'      => 0,
+            'action_id'       => '',
+            'text'            => sprintf_wp("Fiscalization performed %s “%s”.", $plugin_types[$plugin_type], $plugin_id),
+            'before_state_id' => $order['state_id'],
+            'after_state_id'  => $order['state_id'],
+        ]);
     }
 
     public function cancelFiscalization()
